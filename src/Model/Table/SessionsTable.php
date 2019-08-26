@@ -11,6 +11,7 @@ class SessionsTable extends Table
 {
     public function initialize(array $config)
     {
+        
         echo 'in tables';
         $this->addBehavior('Timestamp');
     }

@@ -50,28 +50,18 @@ class SessionsController extends AppController
     }
 
     public function view()
-    { echo json_encode($this->request);
-        $this->autoRender = false;
-        $session = $this->Sessions->findById($this->request->id)->firstOrFail();
-        echo $this->request->getAttribute('params');
-        if ($this->request->is('post')) {
+    {
 
-            $req = $this->request->getdata();
-            $id = $req[0]["id"];
-            echo 'params', $req;
-           
-        }
-        // $this->set('_serialize', ['sessions']);//for template uses -save json 
-        // $this->set(compact('session'));//for template uses -save arrays
-        // $jsonData = $this->request->input('json_decode');
-// echo $jsonData;
-        echo 'this is response view  ' . $this->response;
+        $this->request->trustProxy = true;
+        $this->autoRender = false;
+
+        $req = $this->request->getdata();
+        $id = $req[0]["id"];
+
+        $session = $this->Sessions->findById($id)->firstOrFail();
+
         echo $this->response->withType("application/json")->withStringBody(json_encode($session));
     }
-
-
-
-
 
 
 
@@ -113,50 +103,39 @@ class SessionsController extends AppController
 
         $this->set('session', $session);
         $this->set('_serialize', ['sessions']);
+        // return $this->redirect(['action' => 'index']);
     }
 
 
 
-
-
-    public function edit($slug)
+    public function update()
     {
         $this->autoRender = false;
 
-        $session = $this->Sessions->findBySlug($slug)->firstOrFail();
-        // $session->sourcemac = $this->int2macaddress(($session->sourcemac));
-        // $session->destmac = $this->int2macaddress(($session->destmac));
-
         if ($this->request->is(['post', 'put'])) {
-            $this->Sessions->patchEntity($session, $this->request->getData());
+            $session = $this->Sessions->newEntity();
 
-            // $this->Sessions->patchEntity($session.id, $this->request->getData('Session.id'));
+            //setting request details 
+            $req = $this->request->getdata();
+            $session->id = $req[0]["id"];
+            $session->sourcemac = $req[0]["sourcemac"];
+            $session->destmac = $req[0]["destmac"];
+            $session->ports = $req[0]["ports"];
+            $session->slug = $req[0]["sourcemac"] . $req[0]["destmac"];
+            $saved = $this->Sessions->save($session);
+            if ($saved) {
 
-            // $this->Sessions->patchEntity($session.title, $this->request->getData('Session.title'));
+                $this->Flash->success(__('Your article has been updated.'));
 
-            // $this->Sessions->patchEntity($session.sourcemac, $this->request->getData('Session.sourcemac'));
-
-            // $this->Sessions->patchEntity($session.destmac, $this->request->getData('Session.destmac'));
-
-            // $this->Sessions->patchEntity($session.created, $this->request->getData('Session.created'));
-
-            // $this->Sessions->patchEntity($session.ports, $this->request->getData('Session.ports'));
-
-
-            if ($this->Sessions->save($session)) {
-                // $this->Flash->success(__('Your session has been updated.'));
-                // return $this->redirect(['action' => 'index']);
                 $resultJ = json_encode(array('result' => 'success'));
                 return $this->response->withType("application/json")->withStringBody(json_encode($resultJ));
             } else {
-                $resultJ = json_encode(array('result' => 'error', 'errors' => $session->errors()));
 
+                $this->Flash->error(__('Unable to update your session.'));
+                $resultJ = json_encode(array('result' => 'error', 'errors' => $session->errors()));
                 return $this->response->withType("application/json")->withStringBody(json_encode($resultJ));
             }
-            $this->Flash->error(__('Unable to update your session.'));
         }
-
-        // echo $session;
 
         $this->set('session', $session);
         $this->set('_serialize', ['sessions']);
@@ -167,27 +146,57 @@ class SessionsController extends AppController
 
 
 
-    public function delete($slug)
+    public function delete()
     {
-        $this->request->allowMethod(['post', 'delete']);
+        // $this->request->allowMethod(['post', 'delete']);
+        $req = $this->request->getdata();
+        $id = $req[0]["id"];
 
-        $session = $this->Sessions->findBySlug($slug)->firstOrFail();
-        if ($this->Sessions->delete($session)) {
+
+
+        $session = $this->Sessions->findById($id)->firstOrFail();
+
+        $deleted = $this->Sessions->delete($session);
+        if ($deleted) {
             // $this->Flash->success(__('The {0} session has been deleted.', $session->title));
             // return $this->redirect(['action' => 'index']);
-            $resultJ = json_encode(array('result' => 'success'));
+            $resultJ = json_encode(array('result' => 'successfully deleted'));
             return $this->response->withType("application/json")->withStringBody(json_encode($resultJ));
         } else {
             $resultJ = json_encode(array('result' => 'error', 'errors' => $session->errors()));
 
             return $this->response->withType("application/json")->withStringBody(json_encode($resultJ));
         }
-        $this->set('session', $session);
-        $this->set('_serialize', ['sessions']);
+        // $this->set('session', $session);
+        // $this->set('_serialize', ['sessions']);
     }
 
 
 
+    public function filterbysourcemac()
+    {
+        // $this->request->allowMethod('get');
+        $req = $this->request->getdata();
+        $session = $req[0]['id'];
+        echo '$req';
+        echo $req;
+        echo '$req[0]';
+        echo $req[0];
+        echo '$id';
+        echo $session;
+
+        $session = $req[0]["sourcemac"];
+        // $C=CakeLog::write('debug', 'req'.print_r($req, true)); 
+        echo  json_decode($session);
+        // echo $req[0];
+
+        $query = $this->Users->findAllBySourcemac($session);
+        $data = $query->toArray();
+        // echo $data;
+        // $session->destmac = $req[0]["destmac"];
+        // $session->ports = $req[0]["ports"];
+        // $session->slug = $req[0]["sourcemac"] . $req[0]["destmac"];
+    }
 
 
     //convert mac to big int
