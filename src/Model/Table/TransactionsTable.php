@@ -1,5 +1,5 @@
 <?php
-// src/Model/Table/SessionsTable.php
+// src/Model/Table/TransactionsTable.php
 namespace App\Model\Table;
 // the Validator class
 use Cake\Validation\Validator;
@@ -7,7 +7,7 @@ use Cake\Validation\Validator;
 use Cake\ORM\Table;
 use Cake\Utility\Text;
 
-class SessionsTable extends Table
+class TransactionsTable extends Table
 {
     public function initialize(array $config)
     {

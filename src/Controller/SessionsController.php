@@ -20,12 +20,12 @@ class SessionsController extends AppController
 
     public function index()
     {
-        $this->autoRender = false;
+        // $this->autoRender = false;
         $this->loadComponent('Paginator');
         // $sessions = $this->Paginator->paginate($this->Sessions->find('all'));
 
         $sessions = $this->Sessions->find();
-        // $this->set([
+        // $this->set([ 
         //     'sessions' => $sessions,
         //     'serialize' => ['sessions']
         // ]);
@@ -44,23 +44,24 @@ class SessionsController extends AppController
         //     }
         // }
 
-        echo $this->response->withType("application/json")->withStringBody(json_encode($sessions));
+        return $this->response->withType("application/json")->withStringBody(json_encode($sessions));
         $this->set('_serialize', ['sessions', 'comments']);
         $this->set(compact('sessions'));
     }
 
     public function view()
     {
-
         $this->request->trustProxy = true;
-        $this->autoRender = false;
+        // $this->autoRender = false;
 
         $req = $this->request->getdata();
         $id = $req[0]["id"];
 
-        $session = $this->Sessions->findById($id)->firstOrFail();
-
-        echo $this->response->withType("application/json")->withStringBody(json_encode($session));
+        $sessions = $this->Sessions->findById($id)->firstOrFail();
+        foreach ($sessions as $session) {
+            return $this->response->withType("application/json")->withStringBody(json_encode($session)) ;
+        echo $this->response->withType("application/json")->withStringBody(json_encode($session)) ;
+        }
     }
 
 
@@ -69,76 +70,61 @@ class SessionsController extends AppController
     public function add()
     {
 
-        $this->autoRender = false;
+        // $this->autoRender = false;
         $session = $this->Sessions->newEntity();
 
-        if ($this->request->is('post')) {
+        if ($this->request->is('post','put')) {
             $req = $this->request->getdata();
-            $session->sourcemac = $req[0]["sourcemac"];
-            $session->destmac = $req[0]["destmac"];
-            $session->ports = $req[0]["ports"];
-            $session->slug = $req[0]["sourcemac"] . $req[0]["destmac"];;
+            echo json_encode($req);
+            // $session->sourcemac = $req[0]["sourcemac"];
+            // $session->destmac = $req[0]["destmac"];
+            // $session->ports = $req[0]["ports"];
+            // $session->slug = $req[0]["sourcemac"] . $req[0]["destmac"];;
 
-            // echo json_encode($req);
-            // echo $req["sourcemac"];// if req is an array
-            // echo 'this 2 ' . $req[0]["sourcemac"]; //if req like =>[{}]
-
-
-            // $session = $this->Sessions->patchEntity($session, $this->request->getData());
+            $session = $this->Sessions->patchEntity($session, $this->request->getData());
             $session->slug = $session->sourcemac . $session->destmac;
 
             if ($this->Sessions->save($session)) {
-
-                // $this->Flash->success(__('Your session has been saved.'));
-                // return $this->redirect(['action' => 'index']);
-                $resultJ = json_encode(array('result' => 'success'));
-                return $this->response->withType("application/json")->withStringBody(json_encode($resultJ));
+                $resultJ = json_encode(array('result' => 'Your session has been saved.'));
             } else {
-                $resultJ = json_encode(array('result' => 'error', 'errors' => $session->errors()));
-
-                return $this->response->withType("application/json")->withStringBody(json_encode($resultJ));
+                $resultJ = json_encode(array('result' => 'Unable to add your session.', 'errors' => $session->errors()));
             }
-            $this->Flash->error(__('Unable to add your session.'));
-        }
 
-        $this->set('session', $session);
-        $this->set('_serialize', ['sessions']);
-        // return $this->redirect(['action' => 'index']);
+            return $this->response->withType("application/json")->withStringBody($resultJ);
+        }
+        // echo "not a post request";
     }
 
 
 
     public function update()
     {
-        $this->autoRender = false;
+        // $this->autoRender = false;
 
         if ($this->request->is(['post', 'put'])) {
             $session = $this->Sessions->newEntity();
 
             //setting request details 
-            $req = $this->request->getdata();
-            $session->id = $req[0]["id"];
-            $session->sourcemac = $req[0]["sourcemac"];
-            $session->destmac = $req[0]["destmac"];
-            $session->ports = $req[0]["ports"];
-            $session->slug = $req[0]["sourcemac"] . $req[0]["destmac"];
-            $saved = $this->Sessions->save($session);
-            if ($saved) {
+            // $req = $this->request->getdata();
+            // $session->id = $req[0]["id"];
+            // $session->sourcemac = $req[0]["sourcemac"];
+            // $session->destmac = $req[0]["destmac"];
+            // $session->ports = $req[0]["ports"];
+            // $session->slug = $req[0]["sourcemac"] . $req[0]["destmac"];
+            $session = $this->Sessions->patchEntity($session, $this->request->getData());
+            $session->slug = $session->sourcemac . $session->destmac;
 
-                $this->Flash->success(__('Your article has been updated.'));
-
-                $resultJ = json_encode(array('result' => 'success'));
-                return $this->response->withType("application/json")->withStringBody(json_encode($resultJ));
+            if ($this->Sessions->save($session)) {
+                $resultJ = json_encode(array('result' => 'Your article has been updated.'));
             } else {
-
-                $this->Flash->error(__('Unable to update your session.'));
-                $resultJ = json_encode(array('result' => 'error', 'errors' => $session->errors()));
-                return $this->response->withType("application/json")->withStringBody(json_encode($resultJ));
+                // $this->Flash->error(__('Unable to update your session.'));
+                $resultJ = json_encode(array('result' => 'Unable to update your session.', 'errors' => $session->errors()));
             }
         }
+       echo $this->response->withType("application/json")->withStringBody(json_encode($resultJ));
 
-        $this->set('session', $session);
-        $this->set('_serialize', ['sessions']);
+        // $this->set('session', $session);
+        // $this->set('_serialize', ['sessions']);
     }
 
 
@@ -152,52 +138,90 @@ class SessionsController extends AppController
         $req = $this->request->getdata();
         $id = $req[0]["id"];
 
-
-
         $session = $this->Sessions->findById($id)->firstOrFail();
 
-        $deleted = $this->Sessions->delete($session);
-        if ($deleted) {
+        if ($this->Sessions->delete($session)) {
             // $this->Flash->success(__('The {0} session has been deleted.', $session->title));
             // return $this->redirect(['action' => 'index']);
             $resultJ = json_encode(array('result' => 'successfully deleted'));
-            return $this->response->withType("application/json")->withStringBody(json_encode($resultJ));
         } else {
-            $resultJ = json_encode(array('result' => 'error', 'errors' => $session->errors()));
-
-            return $this->response->withType("application/json")->withStringBody(json_encode($resultJ));
+            $resultJ = json_encode(array('result' => 'The session has NOT been deleted.', 'errors' => $session->errors()));
         }
         // $this->set('session', $session);
         // $this->set('_serialize', ['sessions']);
+
+        return $this->response->withType("application/json")->withStringBody(json_encode($resultJ));
     }
 
 
 
     public function filterbysourcemac()
     {
-        // $this->request->allowMethod('get');
+        // $this->autoRender = false;
+        $this->request->allowMethod('post');
         $req = $this->request->getdata();
-        $session = $req[0]['id'];
-        echo '$req';
-        echo $req;
-        echo '$req[0]';
-        echo $req[0];
-        echo '$id';
-        echo $session;
+        $session = $req[0]['sourcemac'];
+        // echo  $session;
 
-        $session = $req[0]["sourcemac"];
-        // $C=CakeLog::write('debug', 'req'.print_r($req, true)); 
-        echo  json_decode($session);
-        // echo $req[0];
-
-        $query = $this->Users->findAllBySourcemac($session);
-        $data = $query->toArray();
-        // echo $data;
-        // $session->destmac = $req[0]["destmac"];
-        // $session->ports = $req[0]["ports"];
-        // $session->slug = $req[0]["sourcemac"] . $req[0]["destmac"];
+        $sessions = $this->Sessions->findAllBySourcemac($session);
+        foreach ($sessions as $session) {
+            echo $session . "\r";
+        }
+        $this->layout = false;
+        $this->render('/Sessions/filterbysource');
+        return $this->response->withType("application/json")->withStringBody(json_encode($this->response));
     }
 
+    public function filterbydestmac()
+    {
+        // $this->autoRender = false;
+        $this->request->allowMethod('post');
+        $req = $this->request->getdata();
+        $session = $req[0]['destmac'];
+        // echo  $session;
+
+        $sessions = $this->Sessions->findAllByDestmac($session);
+        foreach ($sessions as $session) {
+            // echo $session . "\r";
+        }
+        $this->layout = false;
+        $this->render('/Sessions/filterbysource');
+        return $this->response;
+    }
+
+    public function filterbycreated()
+    {
+        // $this->autoRender = false;
+        $this->request->allowMethod('post');
+        $req = $this->request->getdata();
+        $session = $req[0]['created'];
+        // echo  $session;
+
+        $sessions = $this->Sessions->findAllByCreated($session);
+        foreach ($sessions as $session) {
+            // echo $session . "\r";
+        }
+        $this->layout = false;
+        $this->render('/Sessions/filterbysource');
+        return $this->response;
+    }
+
+    public function filterbymodified()
+    {
+        // $this->autoRender = false;
+        $this->request->allowMethod('post');
+        $req = $this->request->getdata();
+        $session = $req[0]['modified'];
+        // echo  $session;
+
+        $sessions = $this->Sessions->findAllByModified($session);
+        foreach ($sessions as $session) {
+            // echo $session . "\r";
+        }
+        $this->layout = false;
+        $this->render('/Sessions/filterbysource');
+        return $this->response;
+    }
 
     //convert mac to big int
     public function mac2int($mac)
@@ -213,5 +237,12 @@ class SessionsController extends AppController
         }
 
         return strtoupper(implode(':', str_split($hex, 2)));
+    }
+
+    protected function _setPassword($password)
+    {
+        if (strlen($password) > 0) {
+            return (new DefaultPasswordHasher)->hash($password);
+        }
     }
 }

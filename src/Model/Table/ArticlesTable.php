@@ -11,7 +11,6 @@ class ArticlesTable extends Table
 {
     public function initialize(array $config)
     {
-        echo 'tables';
         $this->addBehavior('Timestamp');
     }
 

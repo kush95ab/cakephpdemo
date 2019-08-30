@@ -23,7 +23,7 @@
     <tr>
 
         <td>
-            <?= $this->Html->link($session->id, ['action' => 'view', $session->slug]) ?>
+            <?= $this->Html->link($session->id, ['action' => 'view', $session->id]) ?>
         </td>
 
         <td>
@@ -41,12 +41,12 @@
             <?= $session->created->format(DATE_RFC850) ?>
         </td>
         <td>
-            <?= $this->Html->link('Edit', ['action' => 'edit', $session->slug]) ?>
+            <?= $this->Html->link('Edit', ['action' => 'edit', $session->id]) ?>
         </td>
         <td>
             <?= $this->Form->postLink(
                     'Delete',
-                    ['action' => 'delete', $session->slug],
+                    ['action' => 'delete', $session->id],
                     ['confirm' => 'Are you sure?']
                 )
                 ?>
