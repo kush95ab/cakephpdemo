@@ -89,18 +89,19 @@ class AppController extends Controller
 
     }
 
+
+
     public function beforeFilter(Event $event)
     {
+        
         $this->Auth->allow(['index', 'view', 'display']);
-
-        $user = $this->Auth->identify(); //return false of relevent user
-        if ($user) {
-            $this->Auth->setUser($user);
-            $this->cuser=$_SESSION['Auth']['User']['username'];
-            // echo 'this user = '.$this->cuser;
+        // $st=$this->set('loggedIn', $this->Auth->user());
+        if ($this->Auth->user()!=null) {
+            $username=$this->Auth->user()['username'];
+            $userrole=$this->Auth->user()['role'];
+           echo json_encode(array('state'=>'logged in as '.$username.'('.$userrole.')'));
         } else {
-            $this->cuser='null';
-            // echo "user = ".json_encode($user);
+            echo json_encode(array('state'=>'logged out'));
         }
     }
 }

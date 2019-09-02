@@ -6,6 +6,8 @@ namespace App\Controller;
 
 use App\Model\Entity\Transaction;
 use cake\Cache\Cache;
+use Cake\Event\Event;
+
 // Transaction::uses('HttpSocket', 'Network/Http');
 class TransactionsController extends AppController
 
@@ -16,6 +18,20 @@ class TransactionsController extends AppController
     {
         parent::initialize();
         $this->loadComponent('RequestHandler');
+    }
+
+    public function beforeFilter(Event $event)
+    {
+        parent::beforeFilter($event);
+        // Allow users to register and logout.
+        // You should not add the "login" action to allow list. Doing so would
+        // cause problems with normal functioning of AuthComponent.
+        $role=$this->Auth->user()['role'];
+        if ($role=='admin'||$role=='author') {
+            $this->Auth->allow();
+        }else{
+            $this->Auth->allow(['login','add']);
+        }
     }
 
     public function index()

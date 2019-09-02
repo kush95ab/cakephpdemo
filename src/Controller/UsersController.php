@@ -21,7 +21,12 @@ class UsersController extends AppController
         // Allow users to register and logout.
         // You should not add the "login" action to allow list. Doing so would
         // cause problems with normal functioning of AuthComponent.
-        $this->Auth->allow(['add', 'logout']);
+        $role=$this->Auth->user()['role'];
+        if ($role=='admin') {
+            $this->Auth->allow();
+        }else{
+            $this->Auth->allow(['login','add']);
+        }
     }
 
     public function index()
@@ -101,15 +106,14 @@ class UsersController extends AppController
 
     public function login()
     {
-        $this->autoRender = false;
+        // $this->autoRender = false;
         if ($this->request->is('post')) {
             $user = $this->Auth->identify(); //return false of relevent user
 
             if ($user) {
                 $resultjs = (array('massage' => 'Success : User successfully logged in', 'status' => '200'));
                 // echo 'identified user ' . json_encode($user);
-                // $this->Auth->setUser($user[0]);
-
+                $this->Auth->setUser($user);
             } else {
                 $this->Flash->error(__('Invalid username or password, try again'));
                 $resultjs = (array('massage' => 'Error: Invalid username or password, try again', 'status' => '200'));
@@ -118,7 +122,8 @@ class UsersController extends AppController
         } else {
             $resultjs = (array('massage' => 'Error : Method Not Allowed.', 'status' => '405'));
         }
-        // echo $resultjs;
+
+        // return $this->redirect($this->Auth->redirectUrl());
         return $this->response->withType("application/json")->withStringBody(json_encode($resultjs));
     }
 
@@ -126,7 +131,7 @@ class UsersController extends AppController
 
     public function delete()
     {
-        $this->autoRender=false;
+        $this->autoRender = false;
         if ($this->request->allowMethod(['post', 'delete'])) {
             $req = $this->request->getData();
             $id = $req["id"];
@@ -147,11 +152,34 @@ class UsersController extends AppController
 
     public function logout()
     {
-        if ($this->Auth->logout()) {
-            $resultjs = (array('massage' => 'Success : User successfully loggedout', 'status' => '200'));
+        // if ($this->Auth->logout()) {
+        //     $session = $this->request->session();
+        //     if ($session) {
+        //         if ($session->destroy()) {
+        //             $resultjs = (array('massage' => 'Success : User successfully loggedout', 'status' => '200'));
+        //         } else {
+        //             $resultjs = (array('massage' => 'Error : User logging out faild', 'status' => '404'));
+        //         }
+        //         return $this->response->withType("application/json")->withStringBody(json_encode($resultjs));
+        //         // return $this->redirect($this->Auth->logout());
 
-            return $this->response->withType("application/json")->withStringBody(json_encode($resultjs));
-        }
-        // return $this->redirect($this->Auth->logout());
+        //     }
+        // }
+
+        $session = $this->request->session();
+
+        if ($session) {
+            if ($this->Auth->logout()) {
+                // if ($session->destroy()) {
+                    $this->request->session()->destroy();
+                    $resultjs = (array('massage' => 'Success : User successfully loggedout', 'status' => '200'));
+                } else {
+                    $resultjs = (array('massage' => 'Error : User logging out faild', 'status' => '404'));
+                }
+                return $this->response->withType("application/json")->withStringBody(json_encode($resultjs));
+                // return $this->redirect($this->Auth->logout());
+
+            }
+        // }
     }
 }
