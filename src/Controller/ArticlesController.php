@@ -19,12 +19,23 @@ class ArticlesController extends AppController
     }
 
     public function index()
-    {
-        // $this->loadComponent('Paginator');
-        $articles = $this->Paginator->paginate($this->Articles->find());
-        $this->set(compact('articles'));
 
+    {
+        if ($this->request->is('get')) {
+            # code...
+            // $this->loadComponent('Paginator');
+            $articles = $this->Articles->find();
+            if ($articles) {
+                return json_encode($articles);
+            } else {
+                return json_encode('404 not found');
+            }
+            //  $this->set(compact('articles'));
+        } else {
+            echo "405 (Method Not Allowed)";
+            # code...
         }
+    }
 
 
     public function view($id = null)
@@ -48,6 +59,9 @@ class ArticlesController extends AppController
                 return $this->redirect(['action' => 'index']);
             }
             $this->Flash->error(__('Unable to add your article.'));
+        } else {
+            $this->header("HTTP/1.0 405 Method Not Allowed");
+           
         }
         $this->set('article', $article);
     }

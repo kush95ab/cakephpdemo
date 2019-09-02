@@ -15,7 +15,7 @@
         <th>User name</th>
         <th>User level</th>
         <th>Created</th>
-        <th>Modified</th>
+        <!-- <th>Modified</th> -->
        <th></th>
         
     </tr>
@@ -39,10 +39,10 @@
             <?= $user->created ?>
             <!-- ->format(DATE_RFC850) -->
         </td>
-        <td>
+        <!-- <td>
             <?= $user->modified ?>
-            <!-- ->format(DATE_RFC850) -->
-        </td>
+            ->format(DATE_RFC850)
+        </td> -->
         <!-- <td>
             <?= $this->Html->link('Edit', ['action' => 'edit', $user->id]) ?>
         </td> -->

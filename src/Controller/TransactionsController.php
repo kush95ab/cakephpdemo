@@ -21,10 +21,21 @@ class TransactionsController extends AppController
     public function index()
     {
         // $this->autoRender = false;
-        $this->loadComponent('Paginator');
+        // $this->loadComponent('Paginator');
         // $transactions = $this->Paginator->paginate($this->Transactions->find('all'));
+        if ($this->request->is('get')) {
+            $transactions = $this->Transactions->find();
+            if ($transactions) {
+                $resultjs = (array('result' => $transactions, 'massage' => 'Success : User successfully ', 'status' => '200'));
+            } else {
+                $resultjs = (array('result' => 'Error: User is not inseeted', 'status' => '404'));
+            }
+        } else {
+            $resultjs = (array('result' => 'Error : Method Not Allowed.', 'status' => '405'));
+        }
 
-        $transactions = $this->Transactions->find();
+        return $this->response->withType("application/json")->withStringBody(json_encode($resultjs));
+       
         // $this->set([ 
         //     'transactions' => $transactions,
         //     'serialize' => ['transactions']
@@ -44,23 +55,23 @@ class TransactionsController extends AppController
         //     }
         // }
 
-        return $this->response->withType("application/json")->withStringBody(json_encode($transactions));
-        $this->set('_serialize', ['transactions', 'comments']);
-        $this->set(compact('transactions'));
+        // return $this->response->withType("application/json")->withStringBody(json_encode($resultjs));
+        // $this->set('_serialize', ['transactions', 'comments']);
+        // $this->set(compact('transactions'));
     }
 
     public function view()
     {
         $this->request->trustProxy = true;
-        // $this->autoRender = false;
+        $this->autoRender = false;
 
         $req = $this->request->getdata();
         $id = $req[0]["id"];
 
         $transactions = $this->Transactions->findById($id)->firstOrFail();
         foreach ($transactions as $transaction) {
-            return $this->response->withType("application/json")->withStringBody(json_encode($transaction)) ;
-        echo $this->response->withType("application/json")->withStringBody(json_encode($transaction)) ;
+            return $this->response->withType("application/json")->withStringBody(json_encode($transaction));
+            echo $this->response->withType("application/json")->withStringBody(json_encode($transaction));
         }
     }
 
@@ -73,7 +84,7 @@ class TransactionsController extends AppController
         // $this->autoRender = false;
         $transaction = $this->Transactions->newEntity();
 
-        if ($this->request->is('post','put')) {
+        if ($this->request->is('post', 'put')) {
             $req = $this->request->getdata();
             echo json_encode($req);
             // $transaction->sourcemac = $req[0]["sourcemac"];
@@ -85,9 +96,9 @@ class TransactionsController extends AppController
             $transaction->slug = $transaction->sourcemac . $transaction->destmac;
 
             if ($this->Transactions->save($transaction)) {
-                $resultJ = json_encode(array('result' => 'Your transaction has been saved.'));
+                $resultJ = json_encode(array('massage' => 'Your transaction has been saved.'));
             } else {
-                $resultJ = json_encode(array('result' => 'Unable to add your transaction.', 'errors' => $transaction->errors()));
+                $resultJ = json_encode(array('massage' => 'Unable to add your transaction.', 'errors' => $transaction->errors()));
             }
 
             return $this->response->withType("application/json")->withStringBody($resultJ);
@@ -121,7 +132,7 @@ class TransactionsController extends AppController
                 $resultJ = json_encode(array('result' => 'Unable to update your transaction.', 'errors' => $transaction->errors()));
             }
         }
-       echo $this->response->withType("application/json")->withStringBody(json_encode($resultJ));
+        echo $this->response->withType("application/json")->withStringBody(json_encode($resultJ));
 
         // $this->set('transaction', $transaction);
         // $this->set('_serialize', ['transactions']);

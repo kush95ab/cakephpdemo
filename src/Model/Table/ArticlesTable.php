@@ -1,5 +1,5 @@
 <?php
-// src/Model/Table/ArticlesTable.php
+// src/Model/Table/TransactionsTable.php
 namespace App\Model\Table;
 // the Validator class
 use Cake\Validation\Validator;
