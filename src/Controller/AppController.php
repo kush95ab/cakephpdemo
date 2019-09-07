@@ -18,6 +18,7 @@ namespace App\Controller;
 
 use Cake\Controller\Controller;
 use Cake\Event\Event;
+use WyriHaximus\TwigView\Lib\Twig\Extension\View;
 
 /**
  * Application Controller
@@ -62,13 +63,19 @@ class AppController extends Controller
 
     public function initialize()
     {
+
         parent::initialize();
+        // echo '1'.json_encode($this->request->getParam('action'));
+        // echo 'here '.json_encode($this->request->getParam('controller'));
 
         $this->loadComponent('RequestHandler', [
             'enableBeforeRedirect' => false,
         ]);
+
         $this->loadComponent('Flash');
+
         $this->loadComponent('Auth', [
+            // 'authorize' => ['Controller'], //to run isAuthorized method
             'loginRedirect' => [
                 'controller' => 'Articles',
                 'action' => 'index'
@@ -79,8 +86,6 @@ class AppController extends Controller
                 'home'
             ]
         ]);
-
-
         /*
          * Enable the following component for recommended CakePHP security settings.
          * see https://book.cakephp.org/3.0/en/controllers/components/security.html
@@ -88,20 +93,92 @@ class AppController extends Controller
         //$this->loadComponent('Security');
 
     }
+    public function isAuthorized($user)
+    {
+      
+        //if user logged
+        if (isset($user['role'])) {
+            //Logged any user can access index
+            if ($this->request->getParam('action') === 'index' ||
+            $this->request->getParam('action')==='add') {
 
+                return true;
+            }
+
+            // Admin can access every action
+            //only admin can alter user table
+            if ($user['role'] === 'admin') {
+                return true;
+            }
+
+            //Moderator accesses
+            //Allow all actions in every table but not alter user table
+            if ($user['role'] === 'mod') {
+                //Allow all actions in every table exept user table            
+                if (
+                    $this->request->getParam('controller') === 'transaction' ||
+                    $this->request->getParam('controller') === 'articles' ||
+                    $this->request->getParam('controller') === 'sessions'
+                ) {
+
+                    return true;
+                }
+
+                // Allow view users 
+                if (
+                    $this->request->getParam('controller') === 'users' && ($this->request->getParam('users') === 'view' || 'add')
+                ) {
+
+                    return true;
+                }
+            }
+
+            //Normal User actions
+            //Allow view any table row exept user table
+            if ($user['role'] === 'user') {
+                if (($this->request->getParam('action') === 'view' || 'add')) {
+                    if (
+                        $this->request->getParam('controller') === 'transaction' ||
+                        $this->request->getParam('controller') === 'articles' ||
+                        $this->request->getParam('controller') === 'sessions'
+                    ) {
+                        return true;
+                    }
+                }
+            }
+
+      
+        }
+
+      
+        // Default deny
+        return false;
+    }
 
 
     public function beforeFilter(Event $event)
     {
-        
-        $this->Auth->allow(['index', 'view', 'display']);
-        // $st=$this->set('loggedIn', $this->Auth->user());
-        if ($this->Auth->user()!=null) {
-            $username=$this->Auth->user()['username'];
-            $userrole=$this->Auth->user()['role'];
-           echo json_encode(array('state'=>'logged in as '.$username.'('.$userrole.')'));
+        //get request contoller
+        // or $controller = $this->request->params['controller'];
+
+
+        if ($this->Auth->user() != null) {
+
+            $username = $this->Auth->user()['username'];
+            $userrole = $this->Auth->user()['role'];
+            $this->isAuthorized($this->Auth->user());
+            echo json_encode(array('state' => 'logged in as ' . $username . '(' . $userrole . ')'));
+            
         } else {
-            echo json_encode(array('state'=>'logged out'));
+            if (
+                $this->request->getParam('action') != 'login' || (
+                    $this->request->getParam('controller') === 'users' &&
+                    $this->request->getParam('action') === 'add')
+            ) {
+                  $this->Auth->allow(['login', 'add']);
+            }   
+            echo json_encode(array('state' => 'logged out'));
+            // $this->redirect('users/login');
         }
     }
 }

@@ -5,6 +5,7 @@
 namespace App\Controller;
 
 use App\Controller\AppController;
+use App\Model\Entity\Session;
 // use Cake\Database\Type\DateType;
 use Cake\Event\Event;
 // use PhpParser\Node\Stmt\Echo_;
@@ -18,23 +19,50 @@ class UsersController extends AppController
     public function beforeFilter(Event $event)
     {
         parent::beforeFilter($event);
-        // Allow users to register and logout.
-        // You should not add the "login" action to allow list. Doing so would
-        // cause problems with normal functioning of AuthComponent.
-        $role=$this->Auth->user()['role'];
-        if ($role=='admin') {
-            $this->Auth->allow();
-        }else{
-            $this->Auth->allow(['login','add']);
-        }
     }
+
+    public function isAuthorized($user)
+    {
+        return parent::isAuthorized($user);
+    }
+
+
+    public function login()
+    {
+        // $this->autoRender = false;
+        // $this->session->create;
+
+        if ($this->Auth->user() == null) {
+            if ($this->request->is('post')) {
+                $user = $this->Auth->identify(); //return false of relevent user
+
+                if ($user) {
+                    $resultjs = (array('massage' => 'Success : User successfully logged in', 'status' => '200'));
+                    // echo 'identified user ' . json_encode(($user) ? true : false);
+                    $this->Auth->setUser($user);
+                } else {
+                    $this->Flash->error(__('Invalid username or password, try again'));
+                    $resultjs = (array('massage' => 'Error: Invalid username or password, try again', 'status' => '200'));
+                    // $response = json_encode(array('result' => 'Error:Invalid username or password, try again', 'status' => '401 '));
+                }
+            } else {
+                $resultjs = (array('massage' => 'Error : Method Not Allowed.', 'status' => '405'));
+            }
+        } else {
+            $resultjs = (array('massage' => 'Error : Method Not Allowed.( You are alread logged in. Please logout befor login as another user.)', 'status' => '405'));
+        }
+
+        // return $this->redirect($this->Auth->redirectUrl());
+        return $this->response->withType("application/json")->withStringBody(json_encode($resultjs));
+    }
+
+
 
     public function index()
 
     {
+
         $this->autoRender = false;
-
-
         if ($this->request->is('get')) {
             $users = $this->Users->find();
             if ($users) {
@@ -51,11 +79,13 @@ class UsersController extends AppController
 
         return $this->response->withType("application/json")->withStringBody(json_encode($resultjs));
         // $this->set(compact('users'));
-        // $this->redirect('users/login');-
+        // $this->redirect('users/login');
     }
 
     public function view()
     {
+
+
         $this->autoRender = false;
 
         if ($this->request->is('post')) {
@@ -63,13 +93,18 @@ class UsersController extends AppController
 
             $req = $this->request->getdata();
             $id = $req["id"];
+
             $user = $this->Users->findById($id)->firstOrFail();
+            // if ($this->isAuthorized($this->Auth->user())) {
 
             if ($user) {
                 $resultjs = (array('result' => $user, 'massage' => 'Success : User found', 'status' => '200'));
             } else {
                 $resultjs = (array('result' => 'Error: User not found', 'status' => '404'));
             }
+            // } else {
+            //     $resultjs = (array('result' => 'Error : You don not have permission to access this component', 'status' => '405'));
+            // }
         } else {
             $resultjs = (array('result' => 'Error : Method Not Allowed.', 'status' => '405'));
         }
@@ -104,29 +139,31 @@ class UsersController extends AppController
     }
 
 
-    public function login()
+    public function update()
     {
-        // $this->autoRender = false;
-        if ($this->request->is('post')) {
-            $user = $this->Auth->identify(); //return false of relevent user
+        $this->autoRender = false;
+        if ($this->request->allowMethod(['post', 'update'])) {
+            $req = $this->request->getData();
+            $id = $req["id"];
+            $user = $this->Users->findById($id)->firstOrFail();
 
             if ($user) {
-                $resultjs = (array('massage' => 'Success : User successfully logged in', 'status' => '200'));
-                // echo 'identified user ' . json_encode($user);
-                $this->Auth->setUser($user);
-            } else {
-                $this->Flash->error(__('Invalid username or password, try again'));
-                $resultjs = (array('massage' => 'Error: Invalid username or password, try again', 'status' => '200'));
-                // $response = json_encode(array('result' => 'Error:Invalid username or password, try again', 'status' => '401 '));
+                if ($this->Users->update($user)) {
+                    $resultjs = (array('massage' => 'Success : User successfully update', 'status' => '200'));
+
+                    // $this->Flash->success(__('The {0} account has been deleted.', $user->username));
+                    // return $this->redirect(['action' => 'index']);
+                } else {
+                    $resultjs = (array('massage' => 'Error : Faild to update.', 'status' => '404'));
+                }
+            }else{
+                $resultjs = (array('massage' => 'Error : Record not found in table', 'status' => '404'));
             }
         } else {
             $resultjs = (array('massage' => 'Error : Method Not Allowed.', 'status' => '405'));
         }
-
-        // return $this->redirect($this->Auth->redirectUrl());
         return $this->response->withType("application/json")->withStringBody(json_encode($resultjs));
     }
-
 
 
     public function delete()
@@ -142,7 +179,7 @@ class UsersController extends AppController
                 // $this->Flash->success(__('The {0} account has been deleted.', $user->username));
                 // return $this->redirect(['action' => 'index']);
             } else {
-                $resultjs = (array('massage' => 'Error : Faild to delete.', 'status' => '404'));
+                $resultjs = (array('massage' => 'Error : Faild to delete.Record not found in table', 'status' => '404'));
             }
         } else {
             $resultjs = (array('massage' => 'Error : Method Not Allowed.', 'status' => '405'));
@@ -168,18 +205,20 @@ class UsersController extends AppController
 
         $session = $this->request->session();
 
+
         if ($session) {
+            echo 'this is se =' . json_encode($session) . '/end .....';
             if ($this->Auth->logout()) {
                 // if ($session->destroy()) {
-                    $this->request->session()->destroy();
-                    $resultjs = (array('massage' => 'Success : User successfully loggedout', 'status' => '200'));
-                } else {
-                    $resultjs = (array('massage' => 'Error : User logging out faild', 'status' => '404'));
-                }
-                return $this->response->withType("application/json")->withStringBody(json_encode($resultjs));
-                // return $this->redirect($this->Auth->logout());
-
+                $this->request->session()->destroy();
+                $resultjs = (array('massage' => 'Success : User successfully loggedout', 'status' => '200'));
+            } else {
+                $resultjs = (array('massage' => 'Error : User logging out faild', 'status' => '404'));
             }
+            return $this->response->withType("application/json")->withStringBody(json_encode($resultjs));
+            // return $this->redirect($this->Auth->logout());
+
+        }
         // }
     }
 }

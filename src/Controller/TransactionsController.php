@@ -26,11 +26,11 @@ class TransactionsController extends AppController
         // Allow users to register and logout.
         // You should not add the "login" action to allow list. Doing so would
         // cause problems with normal functioning of AuthComponent.
-        $role=$this->Auth->user()['role'];
-        if ($role=='admin'||$role=='author') {
+        $role = $this->Auth->user()['role'];
+        if ($role == 'admin' || $role == 'author') {
             $this->Auth->allow();
-        }else{
-            $this->Auth->allow(['login','add']);
+        } else {
+            $this->Auth->allow(['login', 'add']);
         }
     }
 
@@ -51,7 +51,7 @@ class TransactionsController extends AppController
         }
 
         return $this->response->withType("application/json")->withStringBody(json_encode($resultjs));
-       
+
         // $this->set([ 
         //     'transactions' => $transactions,
         //     'serialize' => ['transactions']
@@ -78,17 +78,18 @@ class TransactionsController extends AppController
 
     public function view()
     {
-        $this->request->trustProxy = true;
+        // $this->request->trustProxy = true;
         $this->autoRender = false;
 
-        $req = $this->request->getdata();
-        $id = $req[0]["id"];
+        $req = $this->request->getData();
+        $id = $req["id"];
 
-        $transactions = $this->Transactions->findById($id)->firstOrFail();
-        foreach ($transactions as $transaction) {
+        $transaction = $this->Transactions->findById($id)->firstOrFail();
+        // echo json_encode($transaction);
+        // foreach ($transactions as $transaction) {
             return $this->response->withType("application/json")->withStringBody(json_encode($transaction));
-            echo $this->response->withType("application/json")->withStringBody(json_encode($transaction));
-        }
+            // echo $this->response->withType("application/json")->withStringBody(json_encode($transaction));
+        // }
     }
 
 
