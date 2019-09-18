@@ -41,25 +41,25 @@ class AppController extends Controller
      * @return void
      */
 
-    // use \Crud\Controller\ControllerTrait;
+    use \Crud\Controller\ControllerTrait;
 
-    // public $components = [
-    //     'RequestHandler',
-    //     'Crud.Crud' => [
-    //         'actions' => [
-    //             'Crud.Index',
-    //             'Crud.View',
-    //             'Crud.Add',
-    //             'Crud.Edit',
-    //             'Crud.Delete'
-    //         ],
-    //         'listeners' => [
-    //             'Crud.Api',
-    //             'Crud.ApiPagination',
-    //             'Crud.ApiQueryLog'
-    //         ]
-    //     ]
-    // ];
+    public $components = [
+        'RequestHandler',
+        'Crud.Crud' => [
+            'actions' => [
+                'Crud.Index',
+                'Crud.View',
+                'Crud.Add',
+                'Crud.Edit',
+                'Crud.Delete'
+            ],
+            'listeners' => [
+                'Crud.Api',
+                'Crud.ApiPagination',
+                'Crud.ApiQueryLog'
+            ]
+        ]
+    ];
 
     public function initialize()
     {
@@ -90,7 +90,7 @@ class AppController extends Controller
          * Enable the following component for recommended CakePHP security settings.
          * see https://book.cakephp.org/3.0/en/controllers/components/security.html
          */
-        //$this->loadComponent('Security');
+        $this->loadComponent('Security');
 
     }
     public function isAuthorized($user)
