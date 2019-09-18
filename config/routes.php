@@ -50,6 +50,7 @@ Router::defaultRouteClass(DashedRoute::class);
 Router::scope('/', function (RouteBuilder $routes) {
     Router::extensions(['json', 'xml']);
     $routes->resources('Sessions');
+    
 
     // Register scoped middleware for in scopes.
     // $routes->registerMiddleware('csrf', new CsrfProtectionMiddleware([
